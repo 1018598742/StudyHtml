@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .g6-tooltip {
+            width: 300px;
+            border: 1px solid #e2e2e2;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #545454;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px 8px;
+            box-shadow: rgb(174, 174, 174) 0px 0px 10px;
+
+        }
+    </style>
+    <script type="text/javascript" src="https://pan.zealsay.com/family/static/js/jquery.min.js"></script>
+<!--    <script type="text/javascript" src="https://pan.zealsay.com/family/static/js/bootstrap.min.js"></script>-->
+<!--    <script type="text/javascript" src="https://pan.zealsay.com/family/static/js/perfect-scrollbar.min.js"></script>-->
+    <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g6-3.1.0/build/g6.js"></script>
+<!--    <script type="text/javascript" src="https://pan.zealsay.com/family/static/js/main.min.js"></script>-->
+    <script type="text/javascript">
+        $(document).ready(function (e) {
+            const width = document.getElementById('container').scrollWidth
+            const height = document.getElementById('container').scrollHeight || 700
+            console.log("width="+width + " height="+height);
+
+            const graph = new G6.TreeGraph({
+                container: 'container',
+                width,
+                height,
+                pixelRatio: 2,
+                linkCenter: true,
+                modes: {
+                    default: [{
+                        type: 'collapse-expand',
+                        onChange: function onChange(item, collapsed) {
+                            const data = item.get('model').data
+                            data.collapsed = collapsed
+                            return true
+                        }
+                    },
+                        {
+                            type: 'tooltip',
+                            formatText: function formatText(model) {
+                                const text = '<div class="card"><div class="card-header bg-primary"><h4 class="text-center">' + model.name.split('[')[0] + '</h4></div><div class="card-body"><h6><span>性别：</span><span>' + model.gender + '</span></h6><h6><span>配偶：</span><span>' + model.spouse + '</span></h6><h6><span>备注：</span><span>' + model.introduction + '</span></h6></div></div>'
+                                return text
+                            }
+                        },
+                        {
+                            type: 'edge-tooltip',
+                            formatText: function formatText(model) {
+                                const text = 'description: ' + model.label
+                                return text
+                            }
+                        }, 'drag-canvas', 'zoom-canvas']
+                },
+                defaultNode: {
+                    shape: 'ellipse',
+                    size: [50, 30],
+                    color: '#40a9ff',
+                    subTreeSep: 20,
+                    anchorPoints: [[0, 0.5], [1, 0.5]],
+                    style: {
+                        fill: '#C6E5FF',
+                        stroke: '#5B8FF9'
+                    },
+                    labelCfg: {
+                        position: 'center'
+                    }
+                },
+                defaultEdge: {
+                    shape: 'cubic-vertical',
+                    style: {
+                        stroke: '#A3B1BF'
+                    }
+                },
+                layout: {
+                    type: 'compactBox',
+                    direction: 'TB', // H / V / LR / RL / TB / BT
+                    nodeSep: 50,
+                    rankSep: 100
+                }
+            })
+
+            G6.registerNode('circle-animate', {
+                afterDraw(cfg, group) {
+                    const shape = group.get('children')[0]
+                    shape.animate({
+                        repeat: true,
+                        onFrame(ratio) {
+                            const diff = ratio <= 0.5 ? ratio * 10 : (1 - ratio) * 10
+                            return {
+                                rx: cfg.size[0] / 2 + diff,
+                                ry: cfg.size[1] / 2 + diff,
+                            }
+                        }
+                    }, 3000, 'easeCubic')
+                }
+            }, 'circle')
+
+            // 背景动画
+            G6.registerNode('background-animate', {
+                afterDraw(cfg, group) {
+                    const rx = cfg.size[0] / 2
+                    const ry = cfg.size[1] / 2
+                    const back1 = group.addShape('ellipse', {
+                        zIndex: -3,
+                        attrs: {
+                            x: 0,
+                            y: 0,
+                            rx,
+                            ry,
+                            fill: cfg.color,
+                            opacity: 0.6
+                        }
+                    })
+                    const back2 = group.addShape('ellipse', {
+                        zIndex: -2,
+                        attrs: {
+                            x: 0,
+                            y: 0,
+                            rx,
+                            ry,
+                            fill: cfg.color,
+                            opacity: 0.6
+                        }
+                    })
+                    const back3 = group.addShape('ellipse', {
+                        zIndex: -1,
+                        attrs: {
+                            x: 0,
+                            y: 0,
+                            rx,
+                            ry,
+                            fill: cfg.color,
+                            opacity: 0.6
+                        }
+                    })
+                    group.sort() // 排序，根据 zIndex 排序
+                    back1.animate({ // 逐渐放大，并消失
+                        rx: rx + 10,
+                        ry: ry + 10,
+                        opacity: 0.1,
+                        repeat: true // 循环
+                    }, 3000, 'easeCubic', null, 0) // 无延迟
+                    back2.animate({ // 逐渐放大，并消失
+                        rx: rx + 10,
+                        ry: ry + 10,
+                        opacity: 0.1,
+                        repeat: true // 循环
+                    }, 3000, 'easeCubic', null, 1000) // 1 秒延迟
+                    back3.animate({ // 逐渐放大，并消失
+                        rx: rx + 10,
+                        ry: ry + 10,
+                        opacity: 0.1,
+                        repeat: true // 循环
+                    }, 3000, 'easeCubic', null, 2000) // 2 秒延迟
+                }
+            }, 'ellipse')
+
+            graph.node(function (node) {
+                let position = 'center'
+                let fill = '#C6E5FF'
+                let shape = 'ellipse'
+                if (!node.children) {
+                    position = 'center'
+                }
+                if (node.name === '${session.SPRING_SECURITY_CONTEXT.authentication.principal.username!}') {
+                    shape = 'background-animate'
+                }
+                if (node.spouse !== null && node.spouse !== '' && node.spouse !== '暂无' && node.name.indexOf('[') < 0) {
+                    if (node.spouse.indexOf(',') > 0) {
+                        node.name = node.name + '[' + node.spouse.split(',')[0] + '...]'
+                    } else if (node.spouse.indexOf('，') > 0) {
+                        node.name = node.name + '[' + node.spouse.split('，')[0] + '...]'
+                    } else if (node.spouse.indexOf('.') > 0) {
+                        node.name = node.name + '[' + node.spouse.split('.')[0] + '...]'
+                    } else if (node.spouse.indexOf('、') > 0) {
+                        node.name = node.name + '[' + node.spouse.split('、')[0] + '...]'
+                    } else {
+                        node.name = node.name + '[' + node.spouse + ']'
+                    }
+
+                } else {
+                    node.spouse = '暂无'
+                }
+                if (node.gender === 'FEMALE') {
+                    fill = '#FF80AB'
+                    node.gender = '女'
+                } else {
+                    node.gender = '男'
+                }
+                if (node.introduction == null || node.introduction == '' || node.introduction == undefined || node.introduction == 'undefined') {
+                    node.introduction = '暂无'
+                }
+                return {
+                    label: node.name,
+                    shape,
+                    style: {
+                        fill
+                    },
+                    labelCfg: {
+                        position,
+                        style: {
+                            textAlign: 'center',
+                            fontSize: 10
+                        }
+                    }
+                }
+            })
+
+            const mData = "{\"id\":\"6027cacdbb49b67819776484\",\"name\":\"张三\",\"spouse\":\"\",\"password\":\"$2a$10$r6ccrzbMwF87NJ4OcC2cJ.JC6sy8wzPTO4v8IPhcXIFQk1C9GLNJK\",\"gender\":\"MALE\",\"avatar\":null,\"role\":\"USER\",\"introduction\":\"一式\",\"parentId\":null,\"parentName\":null,\"groupId\":\"6027ca9cbb49b67819776483\",\"groupName\":\"汉川\",\"createDate\":{\"year\":2021,\"month\":\"FEBRUARY\",\"monthValue\":2,\"chronology\":{\"calendarType\":\"iso8601\",\"id\":\"ISO\"},\"era\":\"CE\",\"dayOfYear\":44,\"dayOfWeek\":\"SATURDAY\",\"leapYear\":false,\"dayOfMonth\":13},\"children\":[{\"id\":\"6027cb18bb49b67819776485\",\"name\":\"李四\",\"spouse\":\"王五\",\"password\":null,\"gender\":\"MALE\",\"avatar\":null,\"role\":null,\"introduction\":\"\",\"parentId\":\"6027cacdbb49b67819776484\",\"parentName\":null,\"groupId\":\"6027ca9cbb49b67819776483\",\"groupName\":null,\"createDate\":{\"year\":2021,\"month\":\"FEBRUARY\",\"monthValue\":2,\"chronology\":{\"calendarType\":\"iso8601\",\"id\":\"ISO\"},\"era\":\"CE\",\"dayOfYear\":44,\"dayOfWeek\":\"SATURDAY\",\"leapYear\":false,\"dayOfMonth\":13},\"children\":[{\"id\":\"6027cb71bb49b67819776486\",\"name\":\"六\",\"spouse\":\"1\",\"password\":\"$2a$10$7Eo5ilALlQuM.S1nOVW81enb/DrGYkpSVl6Q3ee.HA/3LTz1PcnZO\",\"gender\":\"MALE\",\"avatar\":null,\"role\":\"USER\",\"introduction\":\"\",\"parentId\":\"6027cb18bb49b67819776485\",\"parentName\":null,\"groupId\":\"6027ca9cbb49b67819776483\",\"groupName\":\"汉川\",\"createDate\":{\"year\":2021,\"month\":\"FEBRUARY\",\"monthValue\":2,\"chronology\":{\"calendarType\":\"iso8601\",\"id\":\"ISO\"},\"era\":\"CE\",\"dayOfYear\":44,\"dayOfWeek\":\"SATURDAY\",\"leapYear\":false,\"dayOfMonth\":13},\"children\":[]}]},{\"id\":\"602a34e1bb49b67819776487\",\"name\":\"一样\",\"spouse\":\"\",\"password\":\"$2a$10$Te6hAII9KByuBErht2uXiuCWU0ZAPJSGItjA7F6Tc6k/daO8W6Oau\",\"gender\":\"MALE\",\"avatar\":null,\"role\":\"USER\",\"introduction\":\"配“”\",\"parentId\":\"6027cacdbb49b67819776484\",\"parentName\":null,\"groupId\":\"6027ca9cbb49b67819776483\",\"groupName\":\"汉川\",\"createDate\":{\"year\":2021,\"month\":\"FEBRUARY\",\"monthValue\":2,\"chronology\":{\"calendarType\":\"iso8601\",\"id\":\"ISO\"},\"era\":\"CE\",\"dayOfYear\":46,\"dayOfWeek\":\"MONDAY\",\"leapYear\":false,\"dayOfMonth\":15},\"children\":[]}]}"
+            // const tmp = ${json(mData)}
+            const tmp = $.parseJSON(mData);
+                graph.data(tmp)
+            graph.render()
+            graph.fitView()
+        })
+    </script>
+</head>
+<body>
+    <div class="container-fluid">
+
+        <div class="row">
+            <div id="container"></div>
+        </div>
+
+    </div>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript">
+        function Person(name,age,gender){
+            this.name = name;
+            this.age = age;
+            this.gender = gender;
+        }
+
+        Person.prototype.sayName = function (){
+            alert("Hello,"+this.name)
+        }
+
+        var person = new Person("123",18,"男");
+
+        var person1 = new Person("456",17,"男");
+        // person.sayName();
+        // person1.sayName();
+        console.log(person.sayName == person1.sayName);
+
+        //对象自身中是否含有该属性
+        console.log(person.hasOwnProperty("sayName"));
+        console.log(person.hasOwnProperty("name"));
+        //原型的原型
+        console.log(person.__proto__.__proto__);
+
+        console.log(person)
+    </script>
+</head>
+<body>
+
+</body>
+</html>

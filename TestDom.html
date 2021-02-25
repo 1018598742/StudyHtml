@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript">
+        window.onload = function (){
+            var btn = document.getElementById("btn")
+            console.log(btn)
+            console.log(btn.innerHTML)
+            btn.innerHTML = "hello button"
+            btn.onclick = function (){
+                alert('哈哈');
+            };
+
+            // btn.ondblclick = function (){
+            //     alert('哈哈');
+            // }
+
+            // btn.onmousemove = function (){
+            //     alert('哈哈');
+            // }
+        }
+    </script>
+</head>
+<body>
+    <button id="btn">我是一个按钮</button>
+
+</body>
+</html>
